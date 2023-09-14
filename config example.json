@@ -1,0 +1,8 @@
+{
+    "mastodon_access_token": "YOUR_MASTODON_ACCESS_TOKEN_HERE",
+    "mastodon_api_base_url": "https://YOUR_MASTODON_INSTANCE_URL_HERE",
+    "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
+    "max_tokens": "YOUR_MAX_TOKENS_VALUE_HERE",
+    "temperature": "YOUR_TEMPERATURE_VALUE_HERE",
+    "openai_prompt": "YOUR_OPENAI_PROMPT_HERE"
+}
