@@ -4,5 +4,6 @@
     "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
     "max_tokens": "YOUR_MAX_TOKENS_VALUE_HERE",
     "temperature": "YOUR_TEMPERATURE_VALUE_HERE",
-    "openai_prompt": "YOUR_OPENAI_PROMPT_HERE"
+    "openai_prompt": "YOUR_OPENAI_PROMPT_HERE",
+    "post_interval": "POST_INTERVAL_IN_SECONDS"
 }

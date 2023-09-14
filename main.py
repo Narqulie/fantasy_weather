@@ -21,6 +21,8 @@ try:
         openai_prompt = config['openai_prompt']
         openai_max_tokens = config['max_tokens']
         openai_temperature = config['temperature']
+
+        post_interval = config['post_interval']
 except Exception as e:
     logging.error(e)
     exit()
@@ -67,7 +69,7 @@ def chunk_string_with_counters(s, chunk_size=500):
         if split_at == -1:
             split_at = s.rfind('!', 0, chunk_size)
         if split_at == -1:
-            split_at = s.rfind('?', 0, chunk_size)
+            split_at = s.rfind('.', 0, chunk_size)
 
         # If no suitable split point found, split at the chunk limit
         split_at = split_at + 1 if split_at != -1 else chunk_size
@@ -121,7 +123,7 @@ def main():
                 pass
         logging.info("Post completed")
         logging.info("Sleeping for 2 hours")
-        time.sleep(3600*2)
+        time.sleep(post_interval)
 
 
 # --- Run ---
