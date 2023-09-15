@@ -117,7 +117,6 @@ def post_toot(text):
     m.toot(text)
 
 
-
 # --- Main ---
 def main():
     clear_screen()
