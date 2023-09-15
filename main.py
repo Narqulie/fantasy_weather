@@ -54,7 +54,7 @@ def print_banner():
     \// / / _ \| '__| '_ \| |/ _ \ '__/ _` |
      / //\ (_) | |  | |_) | |  __/ | | (_| |
     /____/\___/|_|  |_.__/|_|\___|_|  \__, |
-                                    |___/
+                                      |___/
     Zorblerg's Weather Bot - Bringing Fantasy Weather to Life 🌦️🌈
     """
     print(banner)
@@ -110,14 +110,12 @@ def chunk_string_with_counters(s, chunk_size=500):
 # --- Post to Mastodon ---
 def post_toot(text):
     m.toot(text)
-    post_time = datetime.now()
-    next_post_time = post_time + post_interval
-    return post_time, next_post_time
 
 
 
 # --- Main ---
 def main():
+    post_time = datetime.now()
     logging.info("Starting weatherbot")
     print_banner()
     while True:
@@ -142,12 +140,13 @@ def main():
             try:
                 logging.info("%d %s", len(forecast), forecast)
                 logging.info("Posting chunk")
-                post_time, next_post_time = post_toot(forecast)
+                post_toot(forecast)
             except Exception as e:
                 logging.error(e)
                 pass
         logging.info("Post completed")
         logging.info(post_time)
+        next_post_time = post_time + post_interval
         logging.info(f"Sleeping until {next_post_time}")
         time.sleep(post_interval)
 
