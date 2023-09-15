@@ -40,18 +40,24 @@ except Exception as e:
 # OpenAI setup
 openai.api_key = openai_api_key
 openai.prompt = openai_prompt
-openai.max_tokens = openai_max_tokens
+#openai.max_tokens = openai_max_tokens
 openai.temperature = openai_temperature
 
 # Mastodon API setup
 m = Mastodon(access_token=mastodon_access_token,
              api_base_url=mastodon_base_url)
 
+# Variables
+post_count = 1
 
+
+# Functions
+# --- Clear screen ---
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+# --- Print banner ---
 def print_banner():
     banner = """
     _____           _     _                
@@ -65,13 +71,13 @@ def print_banner():
     print(banner)
 
 
-# Functions
 # --- Get weather forecast from OpenAI ---
 def openai_get_weather():
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user",
-                  "content": openai_prompt}])
+                  "content": openai_prompt}],
+        max_tokens=int(openai_max_tokens))
     forecast = completion.choices[0].message.content
     logging.info(forecast)
     logging.info(len(forecast))
@@ -119,10 +125,12 @@ def post_toot(text):
 
 # --- Main ---
 def main():
+    global post_count
     clear_screen()
     post_time = datetime.now()
     logging.info("Starting weatherbot")
     print_banner()
+    logging.info(f"Post number: {post_count}")
     while True:
         logging.info("Getting weather forecast")
         forecast = openai_get_weather()
@@ -150,6 +158,7 @@ def main():
                 logging.error(e)
                 pass
         logging.info("Post completed")
+        post_count += 1
         logging.info(post_time)
         next_post_time = post_time + timedelta(seconds=post_interval)
         logging.info(f"Sleeping until {next_post_time}")
