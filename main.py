@@ -5,6 +5,7 @@ import time
 import json
 import sys
 from datetime import datetime
+import os
 
 # Logging
 logging.basicConfig(filename='weatherbot.log',
@@ -45,6 +46,10 @@ openai.temperature = openai_temperature
 # Mastodon API setup
 m = Mastodon(access_token=mastodon_access_token,
              api_base_url=mastodon_base_url)
+
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def print_banner():
@@ -115,6 +120,7 @@ def post_toot(text):
 
 # --- Main ---
 def main():
+    clear_screen()
     post_time = datetime.now()
     logging.info("Starting weatherbot")
     print_banner()
