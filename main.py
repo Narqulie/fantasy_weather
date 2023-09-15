@@ -15,6 +15,9 @@ logging.basicConfig(filename='weatherbot.log',
 # Create a handler for stdout (standard output)
 stdout_handler = logging.StreamHandler(sys.stdout)
 
+#     "openai_prompt": "As Zorblerg, the meteorologist of a fantasy realm. Provide a weather forecast for a fantastical city, town or place. Introduce yourself and the weather for the day. Be imaginative, use emojis for character, keep the reply concise. Try to get the paragraphs close to 500 characters, 3-5 for each reply.",
+
+
 # Add the stdout handler to the root logger
 logging.getLogger().addHandler(stdout_handler)
 
