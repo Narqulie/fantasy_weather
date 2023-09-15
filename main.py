@@ -4,6 +4,7 @@ import logging
 import time
 import json
 import sys
+from datetime import datetime
 
 # Logging
 logging.basicConfig(filename='weatherbot.log',
@@ -45,6 +46,7 @@ openai.temperature = openai_temperature
 m = Mastodon(access_token=mastodon_access_token,
              api_base_url=mastodon_base_url)
 
+
 def print_banner():
     banner = """
     _____           _     _                
@@ -56,6 +58,7 @@ def print_banner():
     Zorblerg's Weather Bot - Bringing Fantasy Weather to Life 🌦️🌈
     """
     print(banner)
+
 
 # Functions
 # --- Get weather forecast from OpenAI ---
@@ -107,6 +110,10 @@ def chunk_string_with_counters(s, chunk_size=500):
 # --- Post to Mastodon ---
 def post_toot(text):
     m.toot(text)
+    post_time = datetime.now()
+    next_post_time = post_time + post_interval
+    return post_time, next_post_time
+
 
 
 # --- Main ---
@@ -135,12 +142,13 @@ def main():
             try:
                 logging.info("%d %s", len(forecast), forecast)
                 logging.info("Posting chunk")
-                post_toot(forecast)
+                post_time, next_post_time = post_toot(forecast)
             except Exception as e:
                 logging.error(e)
                 pass
         logging.info("Post completed")
-        logging.info("Sleeping for 2 hours")
+        logging.info(post_time)
+        logging.info(f"Sleeping until {next_post_time}")
         time.sleep(post_interval)
 
 
