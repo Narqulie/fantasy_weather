@@ -139,7 +139,7 @@ def main():
             forecast_chunks = chunk_string_with_counters(forecast)
             for forecast in forecast_chunks:
                 try:
-                    logging.info("%d %s", len(forecast), forecast)
+                    logging.info("%d %s", len(forecast))
                     logging.info("Posting chunk")
                     post_toot(forecast)
                 except Exception as e:
@@ -149,7 +149,7 @@ def main():
         else:
             logging.info("Posting forecast, under 500 characters")
             try:
-                logging.info("%d %s", len(forecast), forecast)
+                logging.info("%d %s", len(forecast))
                 logging.info("Posting chunk")
                 post_toot(forecast)
             except Exception as e:
