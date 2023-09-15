@@ -4,7 +4,7 @@ import logging
 import time
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 # Logging
@@ -151,7 +151,7 @@ def main():
                 pass
         logging.info("Post completed")
         logging.info(post_time)
-        next_post_time = post_time + post_interval
+        next_post_time = post_time + timedelta(seconds=post_interval)
         logging.info(f"Sleeping until {next_post_time}")
         time.sleep(post_interval)
 
