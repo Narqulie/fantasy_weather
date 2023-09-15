@@ -3,11 +3,18 @@ from mastodon import Mastodon
 import logging
 import time
 import json
+import sys
 
 # Logging
 logging.basicConfig(filename='weatherbot.log',
                     level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
+
+# Create a handler for stdout (standard output)
+stdout_handler = logging.StreamHandler(sys.stdout)
+
+# Add the stdout handler to the root logger
+logging.getLogger().addHandler(stdout_handler)
 
 # Read config
 try:
@@ -38,6 +45,17 @@ openai.temperature = openai_temperature
 m = Mastodon(access_token=mastodon_access_token,
              api_base_url=mastodon_base_url)
 
+def print_banner():
+    banner = """
+    _____           _     _                
+    / _  / ___  _ __| |__ | | ___ _ __ __ _ 
+    \// / / _ \| '__| '_ \| |/ _ \ '__/ _` |
+     / //\ (_) | |  | |_) | |  __/ | | (_| |
+    /____/\___/|_|  |_.__/|_|\___|_|  \__, |
+                                    |___/
+    Zorblerg's Weather Bot - Bringing Fantasy Weather to Life 🌦️🌈
+    """
+    print(banner)
 
 # Functions
 # --- Get weather forecast from OpenAI ---
@@ -94,7 +112,7 @@ def post_toot(text):
 # --- Main ---
 def main():
     logging.info("Starting weatherbot")
-
+    print_banner()
     while True:
         logging.info("Getting weather forecast")
         forecast = openai_get_weather()
