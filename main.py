@@ -123,16 +123,20 @@ def post_toot(text):
 
 # --- Main ---
 def main():
-    global post_count
-    clear_screen()
-    post_time = datetime.now()
-    logging.info("Starting weatherbot")
-    print_banner()
-    logging.info(f"Post number: {post_count}")
     while True:
+        # Initiate cli screen
+        global post_count
+        clear_screen()
+        post_time = datetime.now()
+        logging.info("Starting weatherbot")
+        print_banner()
+        logging.info(f"Post number: {post_count}")
+
+        # Get weather forecast
         logging.info("Getting weather forecast")
         forecast = openai_get_weather()
 
+        # Post weather forecast
         logging.info("Posting weather forecast")
         if len(forecast) > 500:
             logging.info("Forecast too long, splitting into chunks")
