@@ -6,6 +6,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 import os
+import re
 
 # Logging
 logging.basicConfig(filename='weatherbot.log',
@@ -16,6 +17,16 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 # Add the stdout handler to the root logger
 logging.getLogger().addHandler(stdout_handler)
 
+# Define time of day:
+time_of_day = datetime.now().hour
+if time_of_day < 10:
+    time_of_day = "morning"
+elif time_of_day < 18:
+    time_of_day = "afternoon"
+else:
+    time_of_day = "evening"
+logging.info(f"Time of day: {time_of_day}")
+
 # Read config
 try:
     with open('config.json') as f:
@@ -25,7 +36,6 @@ try:
         mastodon_base_url = config['mastodon_base_url']
 
         openai_api_key = config['openai_api_key']
-        openai_prompt = config['openai_prompt']
         openai_max_tokens = config['max_tokens']
         openai_temperature = config['temperature']
 
@@ -34,11 +44,36 @@ except Exception as e:
     logging.error(e)
     exit()
 
+openai_prompt = f"""
+Provide a weather forecast for a fantastical city, town, or place
+with the following structure:
+
+1: Introduction:
+Introduce as Zorblerg, the meteorologist of a fantasy realm.
+Mention the specific fantasy locale. 
+The introduction should be set in the {time_of_day} and
+carry a friendly and imaginative tone.
+
+2: Forecast:
+Offer the {time_of_day}'s weather forecast for the specified fantasy location.
+The forecast should be imaginative and engage the reader's fantasy expectations.
+Use emojis to make the description lively, but ensure the entire forecast remains under 1000 characters.
+Avoid using hashtags in this section.
+
+3: Farewell:
+Conclude with a statement related to the provided forecast. Provide a fond farewell to the readers.
+In this section, incorporate hashtags for social media engagement.
+
+Use the following strict headings for each section:
+1: Introduction
+2: Forecast
+3: Farewell
+"""
 
 # OpenAI setup
 openai.api_key = openai_api_key
 openai.prompt = openai_prompt
-#openai.max_tokens = openai_max_tokens
+# openai.max_tokens = openai_max_tokens
 openai.temperature = openai_temperature
 
 # Mastodon API setup
@@ -58,7 +93,7 @@ def clear_screen():
 # --- Print banner ---
 def print_banner():
     banner = """
-    _____           _     _                
+     _____           _     _                
     / _  / ___  _ __| |__ | | ___ _ __ __ _ 
     \// / / _ \| '__| '_ \| |/ _ \ '__/ _` |
      / //\ (_) | |  | |_) | |  __/ | | (_| |
@@ -67,6 +102,11 @@ def print_banner():
     Zorblerg's Weather Bot - Bringing Fantasy Weather to Life 🌦️🌈
     """
     print(banner)
+
+
+def get_models():
+    models = openai.Model.list()
+    print(models)
 
 
 # --- Get weather forecast from OpenAI ---
@@ -85,41 +125,40 @@ def openai_get_weather():
 
 # --- Split string into chunks ---
 def chunk_string_with_counters(s, chunk_size=500):
-    # List to store the chunks
-    chunks = []
+    # Preprocess the string
+    s = s.replace("1: Introduction:\n", "-XX-").replace(
+        "2: Forecast:\n", "-XX-").replace("3: Farewell:\n", "-XX-").replace("\n", "").strip()
 
-    while s:
-        # If the remaining string is less than chunk size, add it to chunks
-        if len(s) <= chunk_size:
-            chunks.append(s)
-            break
+    # Split the string into sections
+    sections = s.split("-XX-")[1:]  # the first element is empty due to the leading "-XX-"
 
-        # Find the last sentence-ending punctuation before the chunk limit
-        split_at = s.rfind('\n', 0, chunk_size)
-        if split_at == -1:
-            split_at = s.rfind('!', 0, chunk_size)
-        if split_at == -1:
-            split_at = s.rfind('.', 0, chunk_size)
+    # Split section 2 into sentences
+    sentences = re.split(r'(?<=[.!?])\s+', sections[1])
 
-        # If no suitable split point found, split at the chunk limit
-        split_at = split_at + 1 if split_at != -1 else chunk_size
+    # Chunk section 2 respecting sentence boundaries
+    section2_chunks = []
+    current_chunk = ""
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) <= chunk_size:
+            current_chunk += sentence
+        else:
+            section2_chunks.append(current_chunk.strip())
+            current_chunk = sentence
+    if current_chunk:
+        section2_chunks.append(current_chunk.strip())
 
-        # Add chunk to the list and continue with the remainder
-        chunks.append(s[:split_at].strip())
-        s = s[split_at:].strip()
+    # Assemble the final list of chunks
+    chunks = [sections[0]] + section2_chunks + [sections[2]]
 
     # Add counters to the messages
     total_chunks = len(chunks)
-    chunks_with_counters = [f"{idx + 1}/{total_chunks}\n{chunk}" for idx,
-                            chunk in enumerate(chunks)]
+    chunks_with_counters = [f"{idx + 1}/{total_chunks}\n{chunk}" for idx, chunk in enumerate(chunks)]
 
     return chunks_with_counters
-
 
 # --- Post to Mastodon ---
 def post_toot(text):
     m.toot(text)
-
 
 # --- Main ---
 def main():
@@ -168,4 +207,5 @@ def main():
 
 
 # --- Run ---
+#get_models()
 main()
