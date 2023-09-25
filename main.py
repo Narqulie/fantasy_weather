@@ -127,7 +127,7 @@ def openai_get_weather():
 def chunk_string_with_counters(s, chunk_size=500):
     # Preprocess the string
     s = s.replace("1: Introduction:\n", "-XX-").replace(
-        "2: Forecast:\n", "-XX-").replace("3: Farewell:\n", "-XX-").replace("\n", "").strip()
+        "2: Forecast:\n", "-XX-").replace("3: Farewell:\n", "-XX-").replace("\n", "").strip()§
 
     # Split the string into sections
     sections = s.split("-XX-")[1:]  # the first element is empty due to the leading "-XX-"
@@ -136,29 +136,35 @@ def chunk_string_with_counters(s, chunk_size=500):
     sentences = re.split(r'(?<=[.!?])\s+', sections[1])
 
     # Chunk section 2 respecting sentence boundaries
-    section2_chunks = []
-    current_chunk = ""
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) <= chunk_size:
-            current_chunk += sentence
-        else:
+    try:
+        section2_chunks = []
+        current_chunk = ""
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) <= chunk_size:
+                current_chunk += sentence
+            else:
+                section2_chunks.append(current_chunk.strip())
+                current_chunk = sentence
+        if current_chunk:
             section2_chunks.append(current_chunk.strip())
-            current_chunk = sentence
-    if current_chunk:
-        section2_chunks.append(current_chunk.strip())
 
-    # Assemble the final list of chunks
-    chunks = [sections[0]] + section2_chunks + [sections[2]]
+        # Assemble the final list of chunks
+        chunks = [sections[0]] + section2_chunks + [sections[2]]
 
-    # Add counters to the messages
-    total_chunks = len(chunks)
-    chunks_with_counters = [f"{idx + 1}/{total_chunks}\n{chunk}" for idx, chunk in enumerate(chunks)]
+        # Add counters to the messages
+        total_chunks = len(chunks)
+        chunks_with_counters = [f"{idx + 1}/{total_chunks}\n{chunk}" for idx, chunk in enumerate(chunks)]
 
-    return chunks_with_counters
+        return chunks_with_counters
+    
+    except Exception as e:
+        logging.error(e)
+        return [s]
 
 # --- Post to Mastodon ---
 def post_toot(text):
     m.toot(text)
+
 
 # --- Main ---
 def main():
