@@ -132,11 +132,11 @@ def chunk_string_with_counters(s, chunk_size=500):
     # Split the string into sections
     sections = s.split("-XX-")[1:]  # the first element is empty due to the leading "-XX-"
 
-    # Split section 2 into sentences
-    sentences = re.split(r'(?<=[.!?])\s+', sections[1])
-
-    # Chunk section 2 respecting sentence boundaries
     try:
+        # Split section 2 into sentences
+        sentences = re.split(r'(?<=[.!?])\s+', sections[1])
+
+        # Chunk section 2 respecting sentence boundaries
         section2_chunks = []
         current_chunk = ""
         for sentence in sentences:
@@ -155,15 +155,26 @@ def chunk_string_with_counters(s, chunk_size=500):
         total_chunks = len(chunks)
         chunks_with_counters = [f"{idx + 1}/{total_chunks}\n{chunk}" for idx, chunk in enumerate(chunks)]
 
+        while any([len(chunk) > 500 for chunk in chunks]):
+            for idx, chunk in enumerate(chunks):
+                if len(chunk) > 500:
+                    half = len(chunk) // 2
+                    chunks[idx:idx+1] = [chunk[:half], chunk[half:]]
+
         return chunks_with_counters
-    
     except Exception as e:
         logging.error(e)
         return [s]
+    
 
 # --- Post to Mastodon ---
 def post_toot(text):
-    m.toot(text)
+    # last check of lentgh:
+    if len(text) > 500:
+        logging.info("Forecast too long, cancelling send")
+        return
+    else:
+        m.toot(text)
 
 
 # --- Main ---
@@ -186,6 +197,11 @@ def main():
         if len(forecast) > 500:
             logging.info("Forecast too long, splitting into chunks")
             forecast_chunks = chunk_string_with_counters(forecast)
+            
+            valid_chunks = all([len(chunk) <= 500 for chunk in forecast_chunks])
+            if not valid_chunks:
+                logging.error("One or more chunks are too long. Cancelling send.")
+                return
             for forecast in forecast_chunks:
                 try:
                     logging.info("%d", len(forecast))
@@ -193,7 +209,7 @@ def main():
                     post_toot(forecast)
                 except Exception as e:
                     logging.error(e)
-                    break
+                    return
             logging.info("All chunks posted")
         else:
             logging.info("Posting forecast, under 500 characters")
@@ -212,6 +228,5 @@ def main():
         time.sleep(post_interval)
 
 
-# --- Run ---
-#get_models()
-main()
+if __name__ == "__main__":
+    main()
