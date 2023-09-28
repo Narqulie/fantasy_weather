@@ -132,8 +132,13 @@ def chunk_string_with_counters(s, chunk_size=500):
     # Split the string into sections
     sections = s.split("-XX-")[1:]  # the first element is empty due to the leading "-XX-"
 
+    # Check if we have the expected number of sections
+    if len(sections) != 3:
+        logging.error(f"Unexpected number of sections in forecast. Expected 3, got {len(sections)}.")
+        return [s]
+
     try:
-        # Split section 2 into sentences
+        # Split section 2 (Forecast) into sentences
         sentences = re.split(r'(?<=[.!?])\s+', sections[1])
 
         # Chunk section 2 respecting sentence boundaries
@@ -163,9 +168,9 @@ def chunk_string_with_counters(s, chunk_size=500):
 
         return chunks_with_counters
     except Exception as e:
-        logging.error(e)
+        logging.error(f"Error while processing sections: {e}")
         return [s]
-    
+
 
 # --- Post to Mastodon ---
 def post_toot(text):
@@ -177,55 +182,60 @@ def post_toot(text):
         m.toot(text)
 
 
-# --- Main ---
 def main():
     while True:
-        # Initiate cli screen
-        global post_count
-        clear_screen()
-        post_time = datetime.now()
-        logging.info("Starting weatherbot")
-        print_banner()
-        logging.info(f"Post number: {post_count}")
+        try:  # Start of try block to catch any unexpected errors
+            # Initiate cli screen
+            global post_count
+            clear_screen()
+            post_time = datetime.now()
+            logging.info("Starting weatherbot")
+            print_banner()
+            logging.info(f"Post number: {post_count}")
 
-        # Get weather forecast
-        logging.info("Getting weather forecast")
-        forecast = openai_get_weather()
+            # Get weather forecast
+            logging.info("Getting weather forecast")
+            forecast = openai_get_weather()
 
-        # Post weather forecast
-        logging.info("Posting weather forecast")
-        if len(forecast) > 500:
-            logging.info("Forecast too long, splitting into chunks")
-            forecast_chunks = chunk_string_with_counters(forecast)
-            
-            valid_chunks = all([len(chunk) <= 500 for chunk in forecast_chunks])
-            if not valid_chunks:
-                logging.error("One or more chunks are too long. Cancelling send.")
-                return
-            for forecast in forecast_chunks:
+            # Post weather forecast
+            logging.info("Posting weather forecast")
+            if len(forecast) > 500:
+                logging.info("Forecast too long, splitting into chunks")
+                forecast_chunks = chunk_string_with_counters(forecast)
+                
+                valid_chunks = all([len(chunk) <= 500 for chunk in forecast_chunks])
+                if not valid_chunks:
+                    logging.error("One or more chunks are too long. Cancelling send.")
+                    continue
+                for forecast in forecast_chunks:
+                    try:
+                        logging.info("%d", len(forecast))
+                        logging.info("Posting chunk")
+                        post_toot(forecast)
+                    except Exception as e:
+                        logging.error(e)
+                        continue
+                logging.info("All chunks posted")
+            else:
+                logging.info("Posting forecast, under 500 characters")
                 try:
                     logging.info("%d", len(forecast))
                     logging.info("Posting chunk")
                     post_toot(forecast)
                 except Exception as e:
                     logging.error(e)
-                    return
-            logging.info("All chunks posted")
-        else:
-            logging.info("Posting forecast, under 500 characters")
-            try:
-                logging.info("%d", len(forecast))
-                logging.info("Posting chunk")
-                post_toot(forecast)
-            except Exception as e:
-                logging.error(e)
-                pass
-        logging.info("Post completed")
-        post_count += 1
-        logging.info(post_time)
-        next_post_time = post_time + timedelta(seconds=post_interval)
-        logging.info(f"Sleeping until {next_post_time}")
-        time.sleep(post_interval)
+                    continue
+            logging.info("Post completed")
+            post_count += 1
+            logging.info(post_time)
+            next_post_time = post_time + timedelta(seconds=post_interval)
+            logging.info(f"Sleeping until {next_post_time}")
+            time.sleep(post_interval)
+
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            time.sleep(post_interval)
+
 
 
 if __name__ == "__main__":
