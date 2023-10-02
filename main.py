@@ -126,8 +126,8 @@ def openai_get_weather():
 # --- Split string into chunks ---
 def chunk_string_with_counters(s, chunk_size=500):
     # Preprocess the string
-    s = s.replace("1: Introduction:\n", "-XX-").replace(
-        "2: Forecast:\n", "-XX-").replace("3: Farewell:\n", "-XX-").replace("\n", "").strip()
+    s = s.replace("1: Introduction\n", "-XX-").replace(
+        "2: Forecast\n", "-XX-").replace("3: Farewell\n", "-XX-").replace("\n", "").strip()
 
     # Split the string into sections
     sections = s.split("-XX-")[1:]  # the first element is empty due to the leading "-XX-"
