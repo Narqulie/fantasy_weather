@@ -112,7 +112,7 @@ def get_models():
 # --- Get weather forecast from OpenAI ---
 def openai_get_weather():
     completion = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4-1106-preview",
         messages=[{"role": "user",
                   "content": openai_prompt}],
         max_tokens=int(openai_max_tokens))
